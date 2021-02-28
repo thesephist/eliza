@@ -143,12 +143,15 @@ run := doctorFile => (
 				results :: {
 					() -> sub(decomps, i + 1)
 					_ -> (
-						log(f('Decomp matched: {{0}} | {{1}}', [decomp.parts, results]))
+						`` log(f('Decomp matched: {{0}} | {{1}}', [(std.stringList)(decomp.parts), results]))
+						`` log(f('Decomp results: {{0}}', [(std.stringList)(results)]))
 
 						` post-substitution `
 						results := map(results, word => substitute(word, Eliza.posts))
+						`` log(f('Decomp after post: {{0}}', [(std.stringList)(results)]))
 
 						reasmb := nextReasmb(decomp)
+						`` log(f('Reassembly: {{0}}', [(std.stringList)(reasmb)]))
 
 						reasmb.0 :: {
 							'goto' -> (
@@ -233,7 +236,10 @@ run := doctorFile => (
 		(sub := (reasmb, i) => (
 			reword := reasmb.(i)
 			true :: {
-				(reword = ()) -> sub(reasmb, i + 1)
+				(reword = () | reword = '') -> i < len(reasmb) :: {
+					true -> rsub(reasmb, i + 1)
+					_ -> ()
+				}
 				(reword.0 = '(' & reword.(len(reword) - 1) = ')') -> (
 					` TODO: process error when digit inside reword is invalid `
 					index := number(slice(reword, 1, len(reword) - 1))
@@ -271,7 +277,7 @@ run := doctorFile => (
 
 			keys := filter(map(words, word => Eliza.keys.(lower(word))), w => ~(w = ()))
 			keys := sortBy(keys, key => ~(key.weight))
-			log(f('sorted keys: {{0}}', [keys]))
+			`` log(f('sorted keys: {{0}}', [keys]))
 
 			Output := [()]
 			(sub := keys => keys :: {
@@ -306,7 +312,7 @@ run := doctorFile => (
 	}
 
 	(sub := response => (
-		log(response)
+		out(response + Newline)
 		out('?> ')
 		scan(request => trim(request, ' ') :: {
 			'' -> log(final())
