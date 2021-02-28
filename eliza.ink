@@ -14,11 +14,14 @@ append := std.append
 each := std.each
 slice := std.slice
 some := std.some
+every := std.every
 flatten := std.flatten
 f := std.format
 readFile := std.readFile
 
+digit? := str.digit?
 lower := str.lower
+index := str.index
 split := str.split
 trim := str.trim
 replace := str.replace
@@ -27,6 +30,7 @@ sortBy := quicksort.sortBy
 sort := quicksort.sort
 
 Newline := char(10)
+Punctuations := ['.', ',', '?', ';']
 
 ` reports whether item is in list `
 contains := (list, item) => some(map(list, it => it = item))
@@ -135,6 +139,7 @@ run := doctorFile => (
 		}
 	), [])
 	matchKey := (words, key) => (
+		log(f('key decomps: {{0}} {{1}}', [(std.stringList)(words), key.word]))
 		(sub := (decomps, i) => decomps.(i) :: {
 			() -> ()
 			_ -> (
@@ -178,8 +183,8 @@ run := doctorFile => (
 		})(key.decomps, 0)
 	)
 	matchDecomp := (parts, words) => (
-		matchDecompR(parts, words, results := []) :: {
-			true -> results
+		matchDecompR(parts, words, results := [[]]) :: {
+			true -> results.0
 			_ -> ()
 		}
 	)
@@ -189,31 +194,32 @@ run := doctorFile => (
 			(parts = [] | (words = [] & ~(parts = ['*']))) -> false
 			(parts.0 = '*') -> (
 				` loop starts with len(words) and increments down to zero `
-				(sub := (results, i) => (
-					results.len(results) := slice(words, 0, i)
+				(sub := i => (
+					results.(0).len(results.0) := slice(words, 0, i)
 					matchDecompR(slice(parts, 1, len(parts)), slice(words, i, len(words)), results) :: {
 						true -> true
-						_ -> i :: {
-							~1 -> false
-							_ -> (
-								results = slice(results, 0, len(results) - 1)
-								sub(results, i - 1)
-							)
-						}
+						_ -> (
+							results.0 := slice(results.0, 0, len(results.0) - 1)
+							i :: {
+								~1 -> false
+								_ -> sub(i - 1)
+							}
+						)
 					}
-				))(results, len(words))
+				))(len(words))
 			)
 			(parts.(0).(0) = '@') -> (
 				root := slice(parts.0, 1, len(parts.0))
 				true :: {
-					(Eliza.synons.(root) = ()) -> (
-						log(f('Unknown synonym root {{0}}', [root]))
-					)
+					(Eliza.synons.(root) = ()) -> log(f('Unknown synonym root {{0}}', [root]))
 					~contains(Eliza.synons.(root), lower(words.0)) -> false
-					_ -> matchDecompR(
-						slice(parts, 1, len(parts))
-						slice(words, 1, len(words))
-						results
+					_ -> (
+						results.(0).len(results.0) := [words.0]
+						matchDecompR(
+							slice(parts, 1, len(parts))
+							slice(words, 1, len(words))
+							results
+						)
 					)
 				}
 			)
@@ -241,15 +247,22 @@ run := doctorFile => (
 					_ -> ()
 				}
 				(reword.0 = '(' & reword.(len(reword) - 1) = ')') -> (
-					` TODO: process error when digit inside reword is invalid `
-					index := number(slice(reword, 1, len(reword) - 1))
-					insert := results.(index - 1)
-					` TODO: 
-					for punct in [',', '.', ';', '?']:
-						if punct in insert:
-							insert = insert[:insert.index(punct)]`
-					append(output, insert)
-					sub(reasmb, i + 1)
+					num := slice(reword, 1, len(reword) - 1)
+					every(map(num, digit?)) :: {
+						false -> log('Invalid result index {{0}}', [num])
+						_ -> (
+							num := number(num)
+							insert := results.(num - 1)
+							insert := reduce(Punctuations, (ins, punct) => (
+								punctIdx := index(ins, punct) :: {
+									~1 -> ins
+									_ -> slice(ins, 0, punctIdx)
+								}
+							), insert)
+							append(output, insert)
+							sub(reasmb, i + 1)
+						)
+					}
 				)
 				_ -> (
 					append(output, [reword])
@@ -263,10 +276,9 @@ run := doctorFile => (
 		true -> ''
 		_ -> (
 			` punctuation cleanup `
-			request := replace(request, '.', ' . ')
-			request := replace(request, ',', ' , ')
-			request := replace(request, ';', ' ; ')
-			request := replace(request, '?', ' ? ')
+			request := reduce(Punctuations, (req, punct) => (
+				replace(req, punct, ' ' + punct + ' ')
+			), request)
 			` collapse whitespace `
 			request := cat(filter(split(request, ' '), s => len(s) > 0), ' ')
 
@@ -280,16 +292,16 @@ run := doctorFile => (
 			`` log(f('sorted keys: {{0}}', [keys]))
 
 			Output := [()]
-			(sub := keys => keys :: {
-				[] -> ()
+			(sub := i => i :: {
+				len(keys) -> ()
 				_ -> (
-					Output.0 := matchKey(words, keys.0)
-					(Output.0 = ()) & (len(keys) > 0) :: {
-						true -> sub(slice(keys, 1, len(keys)))
+					key := keys.(i)
+					Output.0 := matchKey(words, key) :: {
+						() -> ()
+						_ -> sub(i + 1)
 					}
 				)
-			}
-			)(keys)
+			})(0)
 			Output.0 :: {
 				() -> Eliza.memory :: {
 					[] -> (
@@ -307,16 +319,24 @@ run := doctorFile => (
 				() -> Output.0 := ['<no response>']
 			}
 
-			cat(Output.0, ' ')
+			response := cat(Output.0, ' ')
+			response := reduce(Punctuations, (res, punct) => (
+				replace(res, ' ' + punct, punct)
+			), response)
 		)
 	}
 
+	` main chat loop `
 	(sub := response => (
-		out(response + Newline)
-		out('?> ')
+		out(response + Newline + '?> ')
 		scan(request => trim(request, ' ') :: {
 			'' -> log(final())
-			_ -> sub(respond(request))
+			_ -> (
+				resp := respond(request) :: {
+					'' -> log(final())
+					_ -> sub(resp)
+				}
+		 	)
 		})
 	))(initial())
 )
