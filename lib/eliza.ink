@@ -118,15 +118,15 @@ parseScriptFile := scriptFile => (
 		}
 	))
 
-	` return parsed Eliza state `
+	` return parsed script state `
 	S
 )
 
-runWithScript := (scriptFile, prompter, responder) => (
-	Eliza := parseScriptFile(scriptFile)
+new := scriptFile => (
+	Script := parseScriptFile(scriptFile)
 
-	initial := () => choose(Eliza.initials)
-	final := () => choose(Eliza.finals)
+	initial := () => choose(Script.initials)
+	final := () => choose(Script.finals)
 
 	substitute := (words, pres) => reduce(words, (out, word) => (
 		word := lower(word)
@@ -148,7 +148,7 @@ runWithScript := (scriptFile, prompter, responder) => (
 						`` log(f('Decomp results: {{0}}', [(std.stringList)(results)]))
 
 						` post-substitution `
-						results := map(results, word => substitute(word, Eliza.posts))
+						results := map(results, word => substitute(word, Script.posts))
 						`` log(f('Decomp after post: {{0}}', [(std.stringList)(results)]))
 
 						reasmb := nextReasmb(decomp)
@@ -157,16 +157,16 @@ runWithScript := (scriptFile, prompter, responder) => (
 						reasmb.0 :: {
 							'goto' -> (
 								gotoKey := reasmb.1
-								Eliza.keys.(gotoKey) :: {
+								Script.keys.(gotoKey) :: {
 									() -> (log('Invalid goto key in script file: {{0}}', gotoKey), ())
-									_ -> matchKey(words, Eliza.keys.(gotoKey))
+									_ -> matchKey(words, Script.keys.(gotoKey))
 								}
 							)
 							_ -> (
 								output := reassemble(reasmb, results)
 								decomp.save :: {
 									true -> (
-										Eliza.memory.len(Eliza.memory) := output
+										Script.memory.len(Script.memory) := output
 										sub(decomps, i + 1)
 									)
 									_ -> output
@@ -207,8 +207,8 @@ runWithScript := (scriptFile, prompter, responder) => (
 			(parts.(0).(0) = '@') -> (
 				root := slice(parts.0, 1, len(parts.0))
 				true :: {
-					(Eliza.synons.(root) = ()) -> log(f('Unknown synonym root {{0}}', [root]))
-					~contains(Eliza.synons.(root), lower(words.0)) -> false
+					(Script.synons.(root) = ()) -> log(f('Unknown synonym root {{0}}', [root]))
+					~contains(Script.synons.(root), lower(words.0)) -> false
 					_ -> (
 						results.(0).len(results.0) := [words.0]
 						matchDecompR(
@@ -239,7 +239,7 @@ runWithScript := (scriptFile, prompter, responder) => (
 			reword := reasmb.(i)
 			true :: {
 				(reword = () | reword = '') -> i < len(reasmb) :: {
-					true -> rsub(reasmb, i + 1)
+					true -> sub(reasmb, i + 1)
 					_ -> ()
 				}
 				(reword.0 = '(' & reword.(len(reword) - 1) = ')') -> (
@@ -268,7 +268,7 @@ runWithScript := (scriptFile, prompter, responder) => (
 		))(reasmb, 0)
 		output
 	)
-	respond := request => contains(Eliza.quits, lower(request)) :: {
+	respond := request => contains(Script.quits, lower(request)) :: {
 		true -> ''
 		_ -> (
 			` punctuation cleanup `
@@ -280,10 +280,10 @@ runWithScript := (scriptFile, prompter, responder) => (
 
 			words := split(request, ' ')
 			` pre-substitution `
-			words := substitute(words, Eliza.pres)
+			words := substitute(words, Script.pres)
 			`` log(f('substituted: {{0}}', [cat(words, ' ')]))
 
-			keys := filter(map(words, word => Eliza.keys.(lower(word))), w => ~(w = ()))
+			keys := filter(map(words, word => Script.keys.(lower(word))), w => ~(w = ()))
 			keys := sortBy(keys, key => ~(key.weight))
 			`` log(f('sorted keys: {{0}}', [keys]))
 
@@ -299,14 +299,14 @@ runWithScript := (scriptFile, prompter, responder) => (
 				)
 			})(0)
 			Output.0 :: {
-				() -> Eliza.memory :: {
+				() -> Script.memory :: {
 					[] -> (
-						Output.0 := nextReasmb(Eliza.keys.xnone.decomps.0)
+						Output.0 := nextReasmb(Script.keys.xnone.decomps.0)
 					)
 					_ -> (
-						Output.0 := choose(Eliza.memory)
+						Output.0 := choose(Script.memory)
 						` remove just-used output from memory `
-						Eliza.memory := filter(Eliza.memory, x => ~(x = Output.0))
+						Script.memory := filter(Script.memory, x => ~(x = Output.0))
 					)
 				}
 				_ -> Output.0
@@ -321,6 +321,30 @@ runWithScript := (scriptFile, prompter, responder) => (
 			), response)
 		)
 	}
+
+	{
+		initial: initial
+		final: final
+		respond: respond
+
+		` exposed for unit testing `
+		testing: {
+			substitute: substitute
+			matchKey: matchKey
+			matchDecomp: matchDecomp
+			matchDecompR: matchDecompR
+			nextReasmb: nextReasmb
+			reassemble: reassemble
+		}
+	}
+)
+
+runWithScript := (scriptFile, prompter, responder) => (
+	Eliza := new(scriptFile)
+
+	initial := Eliza.initial
+	final := Eliza.final
+	respond := Eliza.respond
 
 	` main chat loop `
 	(sub := response => (
