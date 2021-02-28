@@ -10,8 +10,8 @@ eliza := load('lib/eliza')
 
 runEliza := eliza.runWithScript
 
-readFile('doctor.txt', file => file :: {
-	() -> log('Could not find doctor file')
+readFile('script.txt', file => file :: {
+	() -> log('Could not find script file')
 	_ -> runEliza(
 		file
 		scan

@@ -114,7 +114,7 @@ parseScriptFile := scriptFile => (
 				parts := split(content, ' ')
 				S.decomp.reasmbs.len(S.decomp.reasmbs) := parts
 			)
-			_ -> log(f('Unknown doctor file command: {{0}}', line))
+			_ -> log(f('Unknown script file command: {{0}}', line))
 		}
 	))
 
@@ -158,7 +158,7 @@ runWithScript := (scriptFile, prompter, responder) => (
 							'goto' -> (
 								gotoKey := reasmb.1
 								Eliza.keys.(gotoKey) :: {
-									() -> (log('Invalid goto key in doctor file: {{0}}', gotoKey), ())
+									() -> (log('Invalid goto key in script file: {{0}}', gotoKey), ())
 									_ -> matchKey(words, Eliza.keys.(gotoKey))
 								}
 							)

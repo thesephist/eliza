@@ -1,7 +1,7 @@
 all: run
 
 run:
-	ink ./main.ink
+	rlwrap ink ./main.ink
 
 fmt:
 	inkfmt fix lib/*.ink *.ink
