@@ -181,19 +181,77 @@ run := doctorFile => (
 		}
 	)
 	matchDecompR := (parts, words, results) => (
-		[parts, words] :: {
-			[[], []] -> true
-			[[], _] -> false
-			_ -> (
-				` TODO: rip`
+		true :: {
+			(parts = [] & words = []) -> true
+			(parts = [] | (words = [] & ~(parts = ['*']))) -> false
+			(parts.0 = '*') -> (
+				` loop starts with len(words) and increments down to zero `
+				(sub := (results, i) => (
+					results.len(results) := slice(words, 0, i)
+					matchDecompR(slice(parts, 1, len(parts)), slice(words, i, len(words)), results) :: {
+						true -> true
+						_ -> i :: {
+							~1 -> false
+							_ -> (
+								results = slice(results, 0, len(results) - 1)
+								sub(results, i - 1)
+							)
+						}
+					}
+				))(results, len(words))
+			)
+			(parts.(0).(0) = '@') -> (
+				root := slice(parts.0, 1, len(parts.0))
+				true :: {
+					(Eliza.synons.(root) = ()) -> (
+						log(f('Unknown synonym root {{0}}', [root]))
+					)
+					~contains(Eliza.synons.(root), lower(words.0)) -> false
+					_ -> matchDecompR(
+						slice(parts, 1, len(parts))
+						slice(words, 1, len(words))
+						results
+					)
+				}
+			)
+			~(lower(parts.0) = lower(words.0)) -> false
+			_ -> matchDecompR(
+				slice(parts, 1, len(parts))
+				slice(words, 1, len(words))
+				results
 			)
 		}
 	)
-	nextReasmb := () => (
-		` TODO: _next_reasmb`
+	nextReasmb := decomp => (
+		index := decomp.nextReasmbIdx
+		result := decomp.reasmbs.(index % len(decomp.reasmbs))
+		decomp.nextReasmbIdx := index + 1
+		result
 	)
-	reassemble := (reasmb, result) => (
-		` TODO: _reassemble `
+	reassemble := (reasmb, results) => (
+		output := []
+		(sub := (reasmb, i) => (
+			reword := reasmb.(i)
+			true :: {
+				(reword = ()) -> sub(reasmb, i + 1)
+				(reword.0 = '(' & reword.(len(reword) - 1) = ')') -> (
+					` TODO: process error when digit inside reword is invalid `
+					index := number(slice(reword, 1, len(reword) - 1))
+					insert := results.(index - 1)
+					` TODO: 
+					for punct in [',', '.', ';', '?']:
+						if punct in insert:
+							insert = insert[:insert.index(punct)]`
+					append(output, insert)
+					sub(reasmb, i + 1)
+				)
+				_ -> (
+					append(output, [reword])
+					sub(reasmb, i + 1)
+				)
+			}
+		))(reasmb, 0)
+		output
 	)
 	respond := request => contains(Eliza.quits, lower(request)) :: {
 		true -> ''
@@ -202,6 +260,7 @@ run := doctorFile => (
 			request := replace(request, '.', ' . ')
 			request := replace(request, ',', ' , ')
 			request := replace(request, ';', ' ; ')
+			request := replace(request, '?', ' ? ')
 			` collapse whitespace `
 			request := cat(filter(split(request, ' '), s => len(s) > 0), ' ')
 
@@ -212,15 +271,19 @@ run := doctorFile => (
 
 			keys := filter(map(words, word => Eliza.keys.(lower(word))), w => ~(w = ()))
 			keys := sortBy(keys, key => ~(key.weight))
-			`` log(f('sorted keys: {{0}}', [keys]))
+			log(f('sorted keys: {{0}}', [keys]))
 
 			Output := [()]
-			(sub := keys => (
-				Output.0 := matchKey(words, keys.0)
-				(Output.0 = ()) & (len(keys) > 0) :: {
-					true -> sub(slice(keys, 1, len(keys)))
-				}
-			))(keys)
+			(sub := keys => keys :: {
+				[] -> ()
+				_ -> (
+					Output.0 := matchKey(words, keys.0)
+					(Output.0 = ()) & (len(keys) > 0) :: {
+						true -> sub(slice(keys, 1, len(keys)))
+					}
+				)
+			}
+			)(keys)
 			Output.0 :: {
 				() -> Eliza.memory :: {
 					[] -> (
