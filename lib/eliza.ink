@@ -1,11 +1,10 @@
 ` Port of ELIZA to Ink `
 
-std := load('vendor/std')
-str := load('vendor/str')
-quicksort := load('vendor/quicksort')
+std := load('../vendor/std')
+str := load('../vendor/str')
+quicksort := load('../vendor/quicksort')
 
 log := std.log
-scan := std.scan
 cat := std.cat
 map := std.map
 filter := std.filter
@@ -17,7 +16,6 @@ some := std.some
 every := std.every
 flatten := std.flatten
 f := std.format
-readFile := std.readFile
 
 digit? := str.digit?
 lower := str.lower
@@ -27,7 +25,6 @@ trim := str.trim
 replace := str.replace
 
 sortBy := quicksort.sortBy
-sort := quicksort.sort
 
 Newline := char(10)
 Punctuations := ['.', ',', '?', ';']
@@ -38,8 +35,8 @@ contains := (list, item) => some(map(list, it => it = item))
 ` picks a choice at random from list `
 choose := list => list.(floor(len(list) * rand()))
 
-parseDoctorFile := doctorFile => (
-	maybeEmptyLines := split(doctorFile, Newline)
+parseScriptFile := scriptFile => (
+	maybeEmptyLines := split(scriptFile, Newline)
 	trimmedLines := map(maybeEmptyLines, line => trim(line, ' '))
 	lines := filter(trimmedLines, line => len(line) > 0)
 
@@ -125,8 +122,8 @@ parseDoctorFile := doctorFile => (
 	S
 )
 
-run := doctorFile => (
-	Eliza := parseDoctorFile(doctorFile)
+runWithScript := (scriptFile, prompter, responder) => (
+	Eliza := parseScriptFile(scriptFile)
 
 	initial := () => choose(Eliza.initials)
 	final := () => choose(Eliza.finals)
@@ -139,7 +136,6 @@ run := doctorFile => (
 		}
 	), [])
 	matchKey := (words, key) => (
-		log(f('key decomps: {{0}} {{1}}', [(std.stringList)(words), key.word]))
 		(sub := (decomps, i) => decomps.(i) :: {
 			() -> ()
 			_ -> (
@@ -328,21 +324,16 @@ run := doctorFile => (
 
 	` main chat loop `
 	(sub := response => (
-		out(response + Newline + '?> ')
-		scan(request => trim(request, ' ') :: {
-			'' -> log(final())
+		responder(response)
+		prompter(request => trim(request, ' ') :: {
+			'' -> responder(final())
 			_ -> (
 				resp := respond(request) :: {
-					'' -> log(final())
+					'' -> responder(final())
 					_ -> sub(resp)
 				}
-		 	)
+			)
 		})
 	))(initial())
 )
-
-readFile('doctor.txt', data => data :: {
-	() -> log('Could not find doctor file')
-	_ -> run(data)
-})
 
