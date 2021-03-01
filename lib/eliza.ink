@@ -135,98 +135,90 @@ new := scriptFile => (
 			_ -> append(out, pres.(word))
 		}
 	), [])
-	matchKey := (words, key) => (
-		(sub := (decomps, i) => decomps.(i) :: {
-			() -> ()
-			_ -> (
-				decomp := decomps.(i)
-				results := matchDecomp(decomp.parts, words)
-				results :: {
-					() -> sub(decomps, i + 1)
-					_ -> (
-						`` log(f('Decomp matched: {{0}} | {{1}}', [(std.stringList)(decomp.parts), results]))
-						`` log(f('Decomp results: {{0}}', [(std.stringList)(results)]))
+	matchKey := (words, key) => (sub := (decomps, i) => decomps.(i) :: {
+		() -> ()
+		_ -> (
+			decomp := decomps.(i)
+			results := matchDecomp(decomp.parts, words)
+			results :: {
+				() -> sub(decomps, i + 1)
+				_ -> (
+					`` log(f('Decomp matched: {{0}} | {{1}}', [(std.stringList)(decomp.parts), results]))
+					`` log(f('Decomp results: {{0}}', [(std.stringList)(results)]))
 
-						` post-substitution `
-						subResults := map(results, word => substitute(word, Script.posts))
-						`` log(f('Decomp after post: {{0}}', [(std.stringList)(subResults)]))
+					` post-substitution `
+					subResults := map(results, word => substitute(word, Script.posts))
+					`` log(f('Decomp after post: {{0}}', [(std.stringList)(subResults)]))
 
-						reasmb := nextReasmb(decomp)
-						`` log(f('Reassembly: {{0}}', [(std.stringList)(reasmb)]))
+					reasmb := nextReasmb(decomp)
+					`` log(f('Reassembly: {{0}}', [(std.stringList)(reasmb)]))
 
-						reasmb.0 :: {
-							'goto' -> (
-								gotoKey := reasmb.1
-								Script.keys.(gotoKey) :: {
-									() -> (log('Invalid goto key in script file: {{0}}', gotoKey), ())
-									_ -> matchKey(words, Script.keys.(gotoKey))
-								}
-							)
-							_ -> (
-								output := reassemble(reasmb, subResults)
-								decomp.save :: {
-									true -> (
-										Script.memory.len(Script.memory) := output
-										sub(decomps, i + 1)
-									)
-									_ -> output
-								}
-							)
-						}
-					)
-				}
-			)
-		})(key.decomps, 0)
-	)
-	matchDecomp := (parts, words) => (
-		matchDecompR(parts, words, results := [[]]) :: {
-			true -> results.0
-			_ -> ()
-		}
-	)
-	matchDecompR := (parts, words, results) => (
-		true :: {
-			(parts = [] & words = []) -> true
-			(parts = [] | (words = [] & ~(parts = ['*']))) -> false
-			(parts.0 = '*') -> (
-				` loop starts with len(words) and increments down to zero `
-				(sub := i => (
-					results.(0).len(results.0) := slice(words, 0, i)
-					matchDecompR(slice(parts, 1, len(parts)), slice(words, i, len(words)), results) :: {
-						true -> true
+					reasmb.0 :: {
+						'goto' -> (
+							gotoKey := reasmb.1
+							Script.keys.(gotoKey) :: {
+								() -> (log('Invalid goto key in script file: {{0}}', gotoKey), ())
+								_ -> matchKey(words, Script.keys.(gotoKey))
+							}
+						)
 						_ -> (
-							results.0 := slice(results.0, 0, len(results.0) - 1)
-							i :: {
-								~1 -> false
-								_ -> sub(i - 1)
+							output := reassemble(reasmb, subResults)
+							decomp.save :: {
+								true -> (
+									Script.memory.len(Script.memory) := output
+									sub(decomps, i + 1)
+								)
+								_ -> output
 							}
 						)
 					}
-				))(len(words))
-			)
-			(parts.(0).(0) = '@') -> (
-				root := slice(parts.0, 1, len(parts.0))
-				true :: {
-					(Script.synons.(root) = ()) -> log(f('Unknown synonym root {{0}}', [root]))
-					~contains(Script.synons.(root), lower(words.0)) -> false
-					_ -> (
-						results.(0).len(results.0) := [words.0]
-						matchDecompR(
-							slice(parts, 1, len(parts))
-							slice(words, 1, len(words))
-							results
-						)
+				)
+			}
+		)
+	})(key.decomps, 0)
+	matchDecomp := (parts, words) => matchDecompR(parts, words, results := [[]]) :: {
+		true -> results.0
+		_ -> ()
+	}
+	matchDecompR := (parts, words, results) => true :: {
+		(parts = [] & words = []) -> true
+		(parts = [] | (words = [] & ~(parts = ['*']))) -> false
+		(parts.0 = '*') -> (sub := i => (
+			` loop starts with len(words) and increments down to zero `
+			results.'0'.len(results.0) := slice(words, 0, i)
+			matchDecompR(slice(parts, 1, len(parts)), slice(words, i, len(words)), results) :: {
+				true -> true
+				_ -> (
+					results.0 := slice(results.0, 0, len(results.0) - 1)
+					i :: {
+						~1 -> false
+						_ -> sub(i - 1)
+					}
+				)
+			}
+		))(len(words))
+		(parts.'0'.0 = '@') -> (
+			root := slice(parts.0, 1, len(parts.0))
+			true :: {
+				(Script.synons.(root) = ()) -> log(f('Unknown synonym root {{0}}', [root]))
+				~contains(Script.synons.(root), lower(words.0)) -> false
+				_ -> (
+					results.'0'.len(results.0) := [words.0]
+					matchDecompR(
+						slice(parts, 1, len(parts))
+						slice(words, 1, len(words))
+						results
 					)
-				}
-			)
-			~(lower(parts.0) = lower(words.0)) -> false
-			_ -> matchDecompR(
-				slice(parts, 1, len(parts))
-				slice(words, 1, len(words))
-				results
-			)
-		}
-	)
+				)
+			}
+		)
+		~(lower(parts.0) = lower(words.0)) -> false
+		_ -> matchDecompR(
+			slice(parts, 1, len(parts))
+			slice(words, 1, len(words))
+			results
+		)
+	}
 	nextReasmb := decomp => (
 		index := decomp.nextReasmbIdx
 		result := decomp.reasmbs.(index % len(decomp.reasmbs))
@@ -248,13 +240,14 @@ new := scriptFile => (
 						false -> log('Invalid result index {{0}}', [maybeNum])
 						_ -> (
 							num := number(maybeNum)
-							insert := results.(num - 1)
-							insert := reduce(Punctuations, (ins, punct) => (
-								punctIdx := index(ins, punct) :: {
+							insert := reduce(
+								Punctuations
+								(ins, punct) => punctIdx := index(ins, punct) :: {
 									~1 -> ins
 									_ -> slice(ins, 0, punctIdx)
 								}
-							), insert)
+								results.(num - 1)
+							)
 							append(output, insert)
 							sub(reasmb, i + 1)
 						)
@@ -290,19 +283,14 @@ new := scriptFile => (
 			Output := [()]
 			(sub := i => i :: {
 				len(keys) -> ()
-				_ -> (
-					key := keys.(i)
-					Output.0 := matchKey(words, key) :: {
-						() -> ()
-						_ -> sub(i + 1)
-					}
-				)
+				_ -> Output.0 := matchKey(words, keys.(i)) :: {
+					() -> ()
+					_ -> sub(i + 1)
+				}
 			})(0)
 			Output.0 :: {
 				() -> Script.memory :: {
-					[] -> (
-						Output.0 := nextReasmb(Script.keys.xnone.decomps.0)
-					)
+					[] -> Output.0 := nextReasmb(Script.keys.xnone.decomps.0)
 					_ -> (
 						Output.0 := choose(Script.memory)
 						` remove just-used output from memory `
@@ -351,12 +339,10 @@ runWithScript := (scriptFile, prompter, responder) => (
 		responder(response)
 		prompter(request => trim(request, ' ') :: {
 			'' -> responder(final())
-			_ -> (
-				resp := respond(request) :: {
-					'' -> responder(final())
-					_ -> sub(resp)
-				}
-			)
+			_ -> resp := respond(request) :: {
+				'' -> responder(final())
+				_ -> sub(resp)
+			}
 		})
 	))(initial())
 )
