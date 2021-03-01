@@ -63,7 +63,7 @@ header h1 {
 	margin: 0;
 	font-size: 1.5em;
 	color: var(--accent);
-    text-shadow: 0 0 12px var(--accent);
+	text-shadow: 0 0 12px var(--accent);
 }
 
 .header-waveform {
@@ -161,6 +161,7 @@ header h1 {
 	color: var(--foreground);
 	text-shadow: var(--text-shadow);
 	animation: emerge .5s cubic-bezier(.24,.91,.48,.99);
+	line-height: 1.4em;
 }
 
 .eliza-message.last-of-speaker {
