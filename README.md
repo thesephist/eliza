@@ -4,11 +4,11 @@
 
 ![Eliza running in a browser](docs/screenshot.png)
 
-ELIZA was one of the earliest programs designed to hold a natural language conversation with human users, and uses a simple algorithm with a predefined "script" to parse your messages and try to offer a related response. The most popular script, including the one included in this web app, is a "doctor" script that tries to ask rhetorical questions like a superficial therapist might.
+ELIZA was one of the earliest programs designed to hold a natural language conversation with human users, and uses a simple algorithm with a predefined "script" to parse your messages and try to offer a related response. The most popular script, also included in this web app, is a "doctor" script that tries to ask rhetorical questions like a superficial therapist might.
 
 ## Usage
 
-If you want to simply try Eliza, you can find try the [online chat interface](https://eliza.dotink.co/).
+If you want to simply try Eliza, you can try the [online chat interface](https://eliza.dotink.co/).
 
 If you want to customize Eliza or run it locally:
 
@@ -20,13 +20,11 @@ You can modify the script in `script.txt` to change how Eliza responds to querie
 
 ## Implementation
 
-This Ink implementation of Eliza is based on MIT-licensed open-source implementations at [jezhiggins/eliza.py](https://github.com/jezhiggins/eliza.py) and [wadetb/eliza](https://github.com/wadetb/eliza), with tweaks from the [original 1966 paper on ELIZA's design](https://cse.buffalo.edu/~rapaport/572/S02/weizenbaum.eliza.1966.pdf). Eliza references a script, kept in the repository as [`script.txt](script.txt), to generate responses. The script followes a well specified format that feels like a domain-specific regular expression, so other scripts may be added to Eliza to modify its behavior.
-
-Eliza is implemented as both a command-line app running on the native Ink interpreter, and as a [web app](https://eliza.dotink.co/), by compiling the Eliza library down to JavaScript.
+This Ink implementation of Eliza is based on MIT-licensed open-source implementations at [jezhiggins/eliza.py](https://github.com/jezhiggins/eliza.py) and [wadetb/eliza](https://github.com/wadetb/eliza), with tweaks from the [original 1966 paper on ELIZA's design](https://cse.buffalo.edu/~rapaport/572/S02/weizenbaum.eliza.1966.pdf). Eliza references a script, kept in the repository as [`script.txt`](script.txt), to generate responses. The script follows a format that feels like a domain-specific regular expression, so other scripts may be added to Eliza to modify its behavior.
 
 ### Isomorphic Ink in the real world
 
-Eliza's core algorithm is implemented in _isomorphic Ink_ code that can run both natively and in the browser, which makes Eliza the first real-world Ink application that runs on both environments with the same codebase.
+Eliza's core algorithm is implemented in _isomorphic Ink_ code that can run both natively and in the browser, which makes Eliza the _first real-world Ink application that runs on both environments with the same codebase_.
 
 On the client, the [`eliza.ink`](lib/eliza.ink) library is loaded by [`main.ink`](main.ink) and run in a simple read-print loop.
 
