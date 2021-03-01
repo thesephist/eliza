@@ -148,8 +148,8 @@ new := scriptFile => (
 						`` log(f('Decomp results: {{0}}', [(std.stringList)(results)]))
 
 						` post-substitution `
-						results := map(results, word => substitute(word, Script.posts))
-						`` log(f('Decomp after post: {{0}}', [(std.stringList)(results)]))
+						subResults := map(results, word => substitute(word, Script.posts))
+						`` log(f('Decomp after post: {{0}}', [(std.stringList)(subResults)]))
 
 						reasmb := nextReasmb(decomp)
 						`` log(f('Reassembly: {{0}}', [(std.stringList)(reasmb)]))
@@ -163,7 +163,7 @@ new := scriptFile => (
 								}
 							)
 							_ -> (
-								output := reassemble(reasmb, results)
+								output := reassemble(reasmb, subResults)
 								decomp.save :: {
 									true -> (
 										Script.memory.len(Script.memory) := output
@@ -243,11 +243,11 @@ new := scriptFile => (
 					_ -> ()
 				}
 				(reword.0 = '(' & reword.(len(reword) - 1) = ')') -> (
-					num := slice(reword, 1, len(reword) - 1)
-					every(map(num, digit?)) :: {
-						false -> log('Invalid result index {{0}}', [num])
+					maybeNum := slice(reword, 1, len(reword) - 1)
+					every(map(maybeNum, digit?)) :: {
+						false -> log('Invalid result index {{0}}', [maybeNum])
 						_ -> (
-							num := number(num)
+							num := number(maybeNum)
 							insert := results.(num - 1)
 							insert := reduce(Punctuations, (ins, punct) => (
 								punctIdx := index(ins, punct) :: {
@@ -272,13 +272,13 @@ new := scriptFile => (
 		true -> ''
 		_ -> (
 			` punctuation cleanup `
-			request := reduce(Punctuations, (req, punct) => (
+			fixedReq := reduce(Punctuations, (req, punct) => (
 				replace(req, punct, ' ' + punct + ' ')
 			), request)
 			` collapse whitespace `
-			request := cat(filter(split(request, ' '), s => len(s) > 0), ' ')
+			fixedReq := cat(filter(split(fixedReq, ' '), s => len(s) > 0), ' ')
 
-			words := split(request, ' ')
+			words := split(fixedReq, ' ')
 			` pre-substitution `
 			words := substitute(words, Script.pres)
 			`` log(f('substituted: {{0}}', [cat(words, ' ')]))
