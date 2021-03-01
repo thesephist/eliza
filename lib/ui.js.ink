@@ -7,6 +7,13 @@ Speaker := {
 	User: 1
 }
 
+AccentColors := [
+	'#f6b4c0' ` pink `
+	'#67ecc9' ` blue/green `
+	'#71db74' ` green `
+	'#ecb667' ` yellow `
+]
+
 querySelector := bind(document, 'querySelector')
 
 scrollToMessageListEnd := () => (
@@ -51,7 +58,7 @@ App := state => (
 
 	addMessage := state.addMessage
 
-	minLoadingTime := 2.7 ` seconds `
+	minLoadingTime := 2.5 ` seconds `
 	goalLoadTime := time() + minLoadingTime
 
 	` Load script and start app `
@@ -230,6 +237,10 @@ App := state => (
 	}
 )
 
+` randomly set theme color `
+randomColor := choose(AccentColors) ` choose is from eliza.ink `
+bind(document.body.style, 'setProperty')('--accent', randomColor)
+
 ` initialize app and render first pass `
 
 State := {
@@ -245,4 +256,3 @@ State := {
 
 app := App(State)
 (app.render)()
-

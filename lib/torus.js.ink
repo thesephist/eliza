@@ -47,7 +47,7 @@ h := (tag, classList, children) => hae(tag, classList, {}, {}, children)
 Renderer := root => (
 	render := window.Torus.render
 
-	InitialDom := h('div', ['matterhorn'], [])
+	InitialDom := h('div', [], [])
 
 	node := render((), (), InitialDom)
 	bind(root, 'appendChild')(node)

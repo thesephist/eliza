@@ -10,7 +10,7 @@ body {
 	--foreground-light: #bbb;
 	--background: #111;
 	--background-light: #222;
-	--accent: pink;
+	--accent: #67ecc9;
 	--text-shadow: 0 0 12px var(--foreground);
 	--font: monospace;
 
@@ -63,7 +63,7 @@ header h1 {
 	margin: 0;
 	font-size: 1.5em;
 	color: var(--accent);
-	text-shadow: var(--text-shadow);
+    text-shadow: 0 0 12px var(--accent);
 }
 
 .header-waveform {
