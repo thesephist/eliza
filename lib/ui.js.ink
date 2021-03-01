@@ -72,15 +72,15 @@ App := state => (
 			render()
 
 			` for testing and demos `
-			addMessage('I\'m really tired today.', Speaker.User)
-			addMessage('Is it because you are really tired today that you came to me?', Speaker.Eliza)
-			addMessage('Yes. What should I do?', Speaker.User)
-			addMessage('I\'m also bored.', Speaker.User)
-			addMessage('Do you believe it is normal to be also bored?', Speaker.Eliza)
-			addMessage('How long have you been bored?', Speaker.Eliza)
-			addMessage('Only since the beginning of time.', Speaker.User)
-			addMessage('I\'m not sure I understand you fully.', Speaker.Eliza)
-			render()
+			`` addMessage('I\'m really tired today.', Speaker.User)
+			`` addMessage('Is it because you are really tired today that you came to me?', Speaker.Eliza)
+			`` addMessage('Yes. What should I do?', Speaker.User)
+			`` addMessage('I\'m also bored.', Speaker.User)
+			`` addMessage('Do you believe it is normal to be also bored?', Speaker.Eliza)
+			`` addMessage('How long have you been bored?', Speaker.Eliza)
+			`` addMessage('Only since the beginning of time.', Speaker.User)
+			`` addMessage('I\'m not sure I understand you fully.', Speaker.Eliza)
+			`` render()
 
 			requestAnimationFrame(() => (
 				inputField := bind(document, 'querySelector')('.eliza-input')
@@ -186,8 +186,8 @@ App := state => (
 						question back in the generated response.')
 					])
 					h('p', [], [
-						str('Eliza as you see here is open-source and written
-						in the ')
+						str('The Eliza that you see here is open-source and
+						written in the ')
 						ha('a', [], {
 							href: 'https://dotink.co/'
 							target: '_blank'
@@ -241,9 +241,6 @@ State := {
 		speaker: speaker
 	}
 	showAbout?: false
-
-	` TODO: testing `
-	showAbout?: true
 }
 
 app := App(State)

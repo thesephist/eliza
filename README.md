@@ -1,5 +1,8 @@
-# eliza
+# Eliza
 
 Port of Eliza to Ink
 
-- Make a techbro version
+![Eliza running in a browser](docs/screenshot.png)
+
+## Implementation
+
