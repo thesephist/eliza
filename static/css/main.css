@@ -1,0 +1,265 @@
+html,
+body {
+	margin: 0;
+	font-size: 18px;
+}
+
+body {
+	/* variables */
+	--foreground: #f8f8f8;
+	--foreground-light: #bbb;
+	--background: #111;
+	--background-light: #222;
+	--accent: pink;
+	--text-shadow: 0 0 12px var(--foreground);
+	--font: monospace;
+
+	background: var(--background);
+	color: var(--foreground);
+	font-family: var(--font);
+}
+
+a {
+	color: var(--foreground);
+	text-decoration: none;
+}
+
+/* layout */
+
+body {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 100vh;
+}
+
+.app {
+	width: calc(100% - 2em);
+	max-width: 720px;
+	height: 1000px;
+	max-height: calc(100vh - 1.5em);
+	margin: .75em auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: space-between;
+}
+
+header,
+nav {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+
+header {
+	width: 100%;
+	justify-content: space-between;
+	margin-bottom: .5em;
+}
+
+header h1 {
+	margin: 0;
+	font-size: 1.5em;
+	color: var(--accent);
+	text-shadow: var(--text-shadow);
+}
+
+.header-waveform {
+	flex-grow: 1;
+	flex-shrink: 0;
+	margin: 1em;
+	width: 0;
+	height: 2px;
+	background: linear-gradient(to right, var(--accent), var(--foreground-light));
+}
+
+.eliza-ui {
+	width: 100%;
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.eliza-loading {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	flex-grow: 1;
+	flex-shrink: 1;
+	text-shadow: 0 0 12px var(--foreground);
+}
+
+@keyframes whirr {
+	from {
+		transform: translate(-50%, -50%) rotate(0deg);
+	}
+	to {
+		transform: translate(-50%, -50%) rotate(360deg);
+	}
+}
+
+.eliza-loading::before,
+.eliza-loading::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	height: 14em;
+	width: 14em;
+	border-radius: 50%;
+	border: 3px solid transparent;
+	border-top-color: var(--accent);
+	animation: whirr 1.3s linear infinite;
+}
+
+.eliza-loading::after {
+	animation: whirr 0.65s linear infinite;
+}
+
+.eliza-message-list {
+	padding-left: 0;
+	margin: 0;
+	overflow-y: auto;
+	flex-grow: 1;
+	flex-shrink: 1;
+	height: 0;
+	box-sizing: border-box;
+	padding: .5em 0;
+}
+
+@keyframes emerge {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		trasnform: translateY(0);
+	}
+}
+
+.eliza-message,
+.eliza-input {
+	border-radius: .75em;
+	padding: .4em .8em;
+	box-sizing: border-box;
+}
+
+.eliza-message {
+	border: 2px solid var(--foreground);
+	background: var(--background);
+	box-sizing: border-box;
+	width: 80%;
+	position: relative;
+	color: var(--foreground);
+	text-shadow: var(--text-shadow);
+	animation: emerge .5s cubic-bezier(.24,.91,.48,.99);
+}
+
+.eliza-message.last-of-speaker {
+	box-shadow: 0 0 24px -10px var(--foreground);
+	margin-bottom: 1.3em;
+}
+
+.eliza-message:not(.last-of-speaker) {
+	border-bottom: 0;
+	padding-bottom: .5em;
+}
+
+.eliza-message.from-eliza {
+	margin-right: auto;
+	--foreground: var(--accent);
+}
+
+.eliza-message.from-eliza.last-of-speaker {
+	border-bottom-left-radius: 0;
+}
+
+.eliza-message.from-eliza.last-of-speaker::before {
+	position: absolute;
+	top: 100%;
+	left: -2px;
+	content: '';
+	height: 1em;
+	width: 1em;
+	background: var(--background);
+	border-left: 2px solid var(--foreground);
+}
+
+.eliza-message.from-user {
+	margin-left: auto;
+}
+
+.eliza-message.from-user.last-of-speaker {
+	border-bottom-right-radius: 0;
+}
+
+.eliza-message.from-user.last-of-speaker::before {
+	position: absolute;
+	top: 100%;
+	right: -2px;
+	content: '';
+	height: 1em;
+	width: 1em;
+	background: var(--background);
+	border-right: 2px solid var(--foreground);
+}
+
+.from-eliza + .from-eliza,
+.from-user + .from-user {
+	margin-top: .35em;
+}
+
+.eliza-input {
+	font-size: 1em;
+	font-family: var(--font)
+	flex-grow: 0;
+	flex-shrink: 0;
+
+	/* shared style as messages from user */
+	color: var(--foreground);
+	background-color: var(--background);
+	width: 100%;
+	border: 2px solid var(--foreground-light);
+}
+
+.eliza-input:focus {
+	outline: none;
+	border-color: var(--foreground);
+}
+
+/* about page */
+
+.about-page {
+	flex-grow: 1;
+	flex-shrink: 0;
+	width: 100%;
+	padding: 1em 0;
+}
+
+.about-back {
+	text-decoration: underline;
+	color: var(--foreground-light);
+}
+
+.about-title {
+	text-shadow: var(--text-shadow);
+	font-weight: bold;
+	margin: 1.5em 0;
+}
+
+.about-page {
+	line-height: 1.5em;
+}
+
+.about-page p a {
+	color: var(--accent);
+	text-decoration: underline;
+}
+
