@@ -141,7 +141,7 @@ header h1 {
 	}
 	to {
 		opacity: 1;
-		trasnform: translateY(0);
+		transform: translateY(0);
 	}
 }
 

@@ -9,7 +9,7 @@ Speaker := {
 
 AccentColors := [
 	'#f6b4c0' ` pink `
-	'#67ecc9' ` blue/green `
+	'#67e9ca' ` blue/green `
 	'#71db74' ` green `
 	'#ecb667' ` yellow `
 ]
@@ -72,7 +72,6 @@ App := state => (
 			true -> 0
 			_ -> goalLoadTime - time()
 		})
-		bind(console, 'log')(goalLoadTime, time(), waitRemaining)
 		wait(waitRemaining, () => (
 			initial := state.Eliza.initial
 			addMessage(initial(), Speaker.Eliza)
