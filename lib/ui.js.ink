@@ -115,26 +115,29 @@ App := state => (
 						render()
 					)
 					keydown: evt => evt.key :: {
-						'Enter' -> (
-							request := trim(state.input, ' ')
-							addMessage(request, Speaker.User)
+						'Enter' -> request := trim(state.input, ' ') :: {
+							'' -> ()
+							_ -> (
+								request := trim(state.input, ' ')
+								addMessage(request, Speaker.User)
 
-							state.input := ''
-							render()
-
-							scrollToMessageListEnd()
-
-							` It feels nicer to the human if the computer
-									waits before responding, to make it feel more
-									organic. `
-							wait(1.2, () => (
-								response := (state.Eliza.respond)(request)
-								addMessage(response, Speaker.Eliza)
+								state.input := ''
 								render()
 
 								scrollToMessageListEnd()
-							))
-						)
+
+								` It feels nicer to the human if the computer
+									waits before responding, to make it feel more
+									organic. `
+								wait(1.2, () => (
+									response := (state.Eliza.respond)(request)
+									addMessage(response, Speaker.Eliza)
+									render()
+
+									scrollToMessageListEnd()
+								))
+							)
+						}
 					}
 				}
 				[]
